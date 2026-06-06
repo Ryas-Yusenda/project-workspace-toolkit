@@ -59,13 +59,14 @@ cd project-workspace-toolkit
 Change this path to your workspace root directory
 
 ```python
-ROOT_PATH = r"YOUR-PROJECT_FOLDER"
+ROOT_PATH = r"YOUR-ROOT-FOLDER"
 ```
 
 Excluding Projects from Cleanup
 
 ```python
 EXCLUDED_PATHS = [
+    r"Web\exmaple-web",
 ]
 ```
 

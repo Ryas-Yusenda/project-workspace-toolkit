@@ -2,7 +2,7 @@ import os
 import shutil
 
 # Root directory containing project categories
-ROOT_PATH = r"YOUR-PROJECT_FOLDER"
+ROOT_PATH = r"YOUR-ROOT-FOLDER"
 
 # Dependency/cache folders that are safe to remove
 FOLDERS_TO_DELETE = {
@@ -27,6 +27,8 @@ EXCLUDED_PATHS = {
     for path in EXCLUDED_PATHS
 }
 
+# add /PROJECT path
+ROOT_PATH = ROOT_PATH + '/Projects'
 
 def is_excluded(project_path: str) -> bool:
     """
