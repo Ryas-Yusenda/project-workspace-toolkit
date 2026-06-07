@@ -1,10 +1,14 @@
 import os
-import shutil
+
+from send2trash import send2trash
 
 # Root directory containing project categories
 ROOT_PATH = r"YOUR-ROOT-FOLDER"
 
-# Dependency/cache folders that are safe to remove
+# Auto add Projects template folder
+ROOT_PATH = os.path.join(ROOT_PATH, "Projects")
+
+# Dependency/cache folders that are safe to move to Recycle Bin
 FOLDERS_TO_DELETE = {
     "node_modules",
     "vendor",
@@ -17,38 +21,32 @@ FOLDERS_TO_DELETE = {
     ".wrangler",
 }
 
-# Projects to exclude (relative to ROOT_PATH)
-EXCLUDED_PATHS = [
-]
+
+# Projects to exclude (relative to Projects folder)
+EXCLUDED_PATHS = []
+
 
 # Convert excluded paths to absolute normalized paths
-EXCLUDED_PATHS = {
-    os.path.normpath(os.path.join(ROOT_PATH, path)).lower()
-    for path in EXCLUDED_PATHS
-}
+EXCLUDED_PATHS = {os.path.normpath(os.path.join(ROOT_PATH, path)).lower() for path in EXCLUDED_PATHS}
 
-# add /PROJECT path
-ROOT_PATH = ROOT_PATH + '/Projects'
 
 def is_excluded(project_path: str) -> bool:
     """
-    Check whether a project should be skipped.
+    Check whether project should be skipped.
     """
     return os.path.normpath(project_path).lower() in EXCLUDED_PATHS
 
 
 def get_folder_size(folder_path: str) -> int:
     """
-    Calculate folder size in bytes.
+    Calculate folder size.
     """
     total_size = 0
 
     for root, _, files in os.walk(folder_path):
         for file in files:
             try:
-                total_size += os.path.getsize(
-                    os.path.join(root, file)
-                )
+                total_size += os.path.getsize(os.path.join(root, file))
             except Exception:
                 pass
 
@@ -59,30 +57,33 @@ def format_size(size_bytes: int) -> str:
     """
     Convert bytes to human-readable format.
     """
-    for unit in ["B", "KB", "MB", "GB", "TB"]:
-        if size_bytes < 1024:
-            return f"{size_bytes:.2f} {unit}"
-        size_bytes /= 1024
+    size = float(size_bytes)
 
-    return f"{size_bytes:.2f} PB"
+    for unit in ["B", "KB", "MB", "GB", "TB"]:
+        if size < 1024:
+            return f"{size:.2f} {unit}"
+
+        size /= 1024
+
+    return f"{size:.2f} PB"
 
 
 def find_cleanup_targets():
     """
-    Scan only:
-    Category -> Project
+    Scan:
+    Projects
+      └── Category
+          └── Project
+              └── dependency folder
 
-    Example:
-    APIs/cloudflare-api-proxy/node_modules
-
-    It will NOT scan deeper nested projects.
+    Only checks direct project children.
     """
+
     targets = []
 
     if not os.path.isdir(ROOT_PATH):
         return targets
 
-    # First level: categories
     for category in os.listdir(ROOT_PATH):
 
         category_path = os.path.join(ROOT_PATH, category)
@@ -90,7 +91,6 @@ def find_cleanup_targets():
         if not os.path.isdir(category_path):
             continue
 
-        # Second level: projects
         for project in os.listdir(category_path):
 
             project_path = os.path.join(category_path, project)
@@ -102,13 +102,9 @@ def find_cleanup_targets():
                 print(f"[SKIPPED] {project_path}")
                 continue
 
-            # Check only direct children of project root
             for dependency in FOLDERS_TO_DELETE:
 
-                dependency_path = os.path.join(
-                    project_path,
-                    dependency
-                )
+                dependency_path = os.path.join(project_path, dependency)
 
                 if os.path.isdir(dependency_path):
                     targets.append(dependency_path)
@@ -121,6 +117,7 @@ def main():
     print("=" * 80)
     print("PROJECT DEPENDENCY CLEANER")
     print("=" * 80)
+
     print(f"Root: {ROOT_PATH}")
     print()
 
@@ -132,11 +129,12 @@ def main():
 
     total_size = 0
 
-    print("\nFolders to delete:\n")
+    print("\nFolders to move to Recycle Bin:\n")
 
     for folder in targets:
 
         size = get_folder_size(folder)
+
         total_size += size
 
         print(folder)
@@ -148,36 +146,38 @@ def main():
     print(f"Space To Free : {format_size(total_size)}")
     print("-" * 80)
 
-    confirm = input(
-        "\nProceed with deletion? (y/n): "
-    ).strip().lower()
+    confirm = input("\nMove these folders to Recycle Bin? (y/n): ").strip().lower()
 
     if confirm != "y":
+
         print("Operation cancelled.")
         return
 
-    deleted_size = 0
+    moved_size = 0
 
-    print("\nDeleting folders...\n")
+    print("\nMoving folders...\n")
 
     for folder in targets:
 
         try:
+
             size = get_folder_size(folder)
 
-            shutil.rmtree(folder)
+            # Safe delete Recycle Bin
+            send2trash(folder)
 
-            deleted_size += size
+            moved_size += size
 
-            print(f"[OK] {folder}")
+            print(f"[MOVED] {folder}")
 
         except Exception as e:
+
             print(f"[FAILED] {folder}")
             print(f"         {e}")
 
     print("\n" + "=" * 80)
     print("CLEANUP COMPLETED")
-    print(f"Recovered Space: {format_size(deleted_size)}")
+    print(f"Moved To Recycle Bin: {format_size(moved_size)}")
     print("=" * 80)
 
 

@@ -17,7 +17,7 @@
 <p align="center">
 Utilities for creating, organizing, and maintaining large local development workspaces.
 <br>
-Includes workspace bootstrapping and dependency cleanup tools for developers managing multiple projects.
+Includes workspace bootstrapping and safe dependency cleanup tools for developers managing multiple projects.
 </p>
 
 ## 🧐 About
@@ -27,61 +27,30 @@ Project Workspace Toolkit is a lightweight collection of Python utilities design
 The toolkit currently provides two utilities:
 
 - **create_workspace.py** — Generates a standardized workspace structure for organizing projects.
-- **clean_dependencies.py** — Removes dependency and cache directories from projects to reclaim disk space.
+- **clean_dependencies.py** — Scans projects and moves dependency/cache directories to Recycle Bin to safely reclaim disk space.
 
 ## ✨ Features
 
 - Create a standardized project workspace
 - Organize projects by category
-- Clean dependency and cache folders
-- Preview disk usage before deletion
+- Clean dependency and cache folders safely
+- Move deleted folders to Windows Recycle Bin
+- Prevent permanent deletion
+- Preview disk usage before cleanup
 - Exclude active projects from cleanup
 - Fast scanning without traversing deep nested directories
-- No external dependencies required
 
 ## 🏁 Getting Started
 
 ### Prerequisites
 
 - Python 3.10+
+- Windows (for Recycle Bin support)
 
-### Clone Repository
+### Install Dependency
 
-```bash
-git clone https://github.com/YOUR_USERNAME/project-workspace-toolkit.git
-cd project-workspace-toolkit
-```
-
-## 🎈 Usage
-
-### Configuration
-
-Change this path to your workspace root directory
-
-```python
-ROOT_PATH = r"YOUR-ROOT-FOLDER"
-```
-
-Excluding Projects from Cleanup
-
-```python
-EXCLUDED_PATHS = [
-    r"Web\exmaple-web",
-]
-```
-
-### Create Workspace
+Install required package:
 
 ```bash
-python create_workspace.py
+pip install send2trash
 ```
-
-### Clean Dependencies
-
-```bash
-python clean_dependencies.py
-```
-
-## 📄 License
-
-[MIT License](LICENSE) – feel free to fork, modify, and use for your own projects.

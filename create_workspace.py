@@ -18,9 +18,6 @@ FOLDERS = [
 ]
 
 for folder in FOLDERS:
-    (Path(ROOT_PATH) / folder).mkdir(
-        parents=True,
-        exist_ok=True
-    )
+    (Path(ROOT_PATH) / folder).mkdir(parents=True, exist_ok=True)
 
 print("Folder structure created successfully.")
