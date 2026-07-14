@@ -19,6 +19,8 @@ FOLDERS_TO_DELETE = {
     ".parcel-cache",
     ".turbo",
     ".wrangler",
+    ".venv",
+    "__pycache__",
 }
 
 
@@ -183,3 +185,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    input("\nEXIT(0): ")
