@@ -33,3 +33,5 @@ for folder in FOLDERS:
 
 console.print(root_tree)
 console.print("[bold green]Folder structure created successfully.[/bold green]")
+
+console.input("\n[dim]Press Enter to exit...[/dim]")
