@@ -2,33 +2,9 @@ import os
 
 from send2trash import send2trash
 
-# Root directory containing project categories
-ROOT_PATH = r"YOUR-ROOT-FOLDER"
+from var import EXCLUDED_PATHS, FOLDERS_TO_DELETE, ROOT_PATH
 
-# Auto add Projects template folder
 ROOT_PATH = os.path.join(ROOT_PATH, "Projects")
-
-# Dependency/cache folders that are safe to move to Recycle Bin
-FOLDERS_TO_DELETE = {
-    "node_modules",
-    "vendor",
-    ".pnpm-store",
-    ".npm",
-    ".yarn",
-    ".cache",
-    ".parcel-cache",
-    ".turbo",
-    ".wrangler",
-    ".venv",
-    "__pycache__",
-}
-
-
-# Projects to exclude (relative to Projects folder)
-EXCLUDED_PATHS = []
-
-
-# Convert excluded paths to absolute normalized paths
 EXCLUDED_PATHS = {os.path.normpath(os.path.join(ROOT_PATH, path)).lower() for path in EXCLUDED_PATHS}
 
 

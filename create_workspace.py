@@ -1,7 +1,6 @@
 from pathlib import Path
 
-# Root workspace location
-ROOT_PATH = r"YOUR-ROOT-FOLDER"
+from var import ROOT_PATH
 
 # Folder structure to create
 FOLDERS = [
