@@ -1,8 +1,15 @@
 import os
 
+from rich import box
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Confirm
+from rich.table import Table
 from send2trash import send2trash
 
 from var import EXCLUDED_PATHS, FOLDERS_TO_DELETE, ROOT_PATH
+
+console = Console()
 
 ROOT_PATH = os.path.join(ROOT_PATH, "Projects")
 EXCLUDED_PATHS = {os.path.normpath(os.path.join(ROOT_PATH, path)).lower() for path in EXCLUDED_PATHS}
@@ -23,10 +30,7 @@ def get_folder_size(folder_path: str) -> int:
 
     for root, _, files in os.walk(folder_path):
         for file in files:
-            try:
-                total_size += os.path.getsize(os.path.join(root, file))
-            except Exception:
-                pass
+            total_size += os.path.getsize(os.path.join(root, file))
 
     return total_size
 
@@ -58,9 +62,10 @@ def find_cleanup_targets():
     """
 
     targets = []
+    skipped = []
 
     if not os.path.isdir(ROOT_PATH):
-        return targets
+        return targets, skipped
 
     for category in os.listdir(ROOT_PATH):
 
@@ -77,7 +82,7 @@ def find_cleanup_targets():
                 continue
 
             if is_excluded(project_path):
-                print(f"[SKIPPED] {project_path}")
+                skipped.append(project_path)
                 continue
 
             for dependency in FOLDERS_TO_DELETE:
@@ -87,78 +92,67 @@ def find_cleanup_targets():
                 if os.path.isdir(dependency_path):
                     targets.append(dependency_path)
 
-    return targets
+    return targets, skipped
+
+
+def show_target_table(targets: list[str], total_size: int) -> None:
+    table = Table(title="Folders to move", box=box.ROUNDED, header_style="bold cyan")
+    table.add_column("Path", style="magenta")
+    table.add_column("Size", justify="right", style="green")
+
+    for folder in targets:
+        size = get_folder_size(folder)
+        table.add_row(folder, format_size(size))
+
+    console.print(table)
+    console.print()
+    console.print(f"[bold]Folders found:[/] {len(targets)}")
+    console.print(f"[bold]Space to free:[/] {format_size(total_size)}")
 
 
 def main():
+    console.print(Panel.fit("[bold cyan]PROJECT DEPENDENCY CLEANER[/bold cyan]", border_style="cyan"))
+    console.print(f"[bold]Root:[/] {ROOT_PATH}")
+    console.print()
 
-    print("=" * 80)
-    print("PROJECT DEPENDENCY CLEANER")
-    print("=" * 80)
-
-    print(f"Root: {ROOT_PATH}")
-    print()
-
-    targets = find_cleanup_targets()
+    targets, skipped = find_cleanup_targets()
 
     if not targets:
-        print("No dependency folders found.")
+        console.print("[yellow]No dependency folders found.[/yellow]")
+        if skipped:
+            console.print(f"[dim]Skipped {len(skipped)} protected project(s).[/dim]")
         return
 
-    total_size = 0
+    total_size = sum(get_folder_size(folder) for folder in targets)
+    show_target_table(targets, total_size)
 
-    print("\nFolders to move to Recycle Bin:\n")
-
-    for folder in targets:
-
-        size = get_folder_size(folder)
-
-        total_size += size
-
-        print(folder)
-        print(f"  Size: {format_size(size)}")
-        print()
-
-    print("-" * 80)
-    print(f"Folders Found : {len(targets)}")
-    print(f"Space To Free : {format_size(total_size)}")
-    print("-" * 80)
-
-    confirm = input("\nMove these folders to Recycle Bin? (y/n): ").strip().lower()
-
-    if confirm != "y":
-
-        print("Operation cancelled.")
+    if not Confirm.ask("\nMove these folders to the Recycle Bin?", default=False):
+        console.print("[yellow]Operation cancelled.[/yellow]")
         return
 
     moved_size = 0
 
-    print("\nMoving folders...\n")
+    console.print("\n[bold green]Moving folders...[/bold green]")
 
     for folder in targets:
-
         try:
-
             size = get_folder_size(folder)
-
-            # Safe delete Recycle Bin
             send2trash(folder)
-
             moved_size += size
+            console.print(f"[green]✓[/green] [bold]{folder}[/bold]")
+        except OSError as exc:
+            console.print(f"[red]✗[/red] {folder}")
+            console.print(f"[red]{exc}[/red]")
 
-            print(f"[MOVED] {folder}")
-
-        except Exception as e:
-
-            print(f"[FAILED] {folder}")
-            print(f"         {e}")
-
-    print("\n" + "=" * 80)
-    print("CLEANUP COMPLETED")
-    print(f"Moved To Recycle Bin: {format_size(moved_size)}")
-    print("=" * 80)
+    console.print()
+    console.print(
+        Panel.fit(
+            f"[bold green]CLEANUP COMPLETED[/bold green]\nMoved to Recycle Bin: {format_size(moved_size)}",
+            border_style="green",
+        )
+    )
 
 
 if __name__ == "__main__":
     main()
-    input("\nEXIT(0): ")
+    console.input("\n[dim]Press Enter to exit...[/dim]")
