@@ -96,7 +96,7 @@ def find_cleanup_targets():
 
 
 def show_target_table(targets: list[str], total_size: int) -> None:
-    table = Table(title="Folders to move", box=box.ROUNDED, header_style="bold cyan")
+    table = Table(title="Folders to be deleted", box=box.ROUNDED, header_style="bold cyan")
     table.add_column("Path", style="magenta")
     table.add_column("Size", justify="right", style="green")
 
@@ -126,19 +126,19 @@ def main():
     total_size = sum(get_folder_size(folder) for folder in targets)
     show_target_table(targets, total_size)
 
-    if not Confirm.ask("\nMove these folders to the Recycle Bin?", default=False):
+    if not Confirm.ask("\nDelete these folders?", default=False):
         console.print("[yellow]Operation cancelled.[/yellow]")
         return
 
-    moved_size = 0
+    deleted_size = 0
 
-    console.print("\n[bold green]Moving folders...[/bold green]")
+    console.print("\n[bold green]Deleting folders...[/bold green]")
 
     for folder in targets:
         try:
             size = get_folder_size(folder)
             send2trash(folder)
-            moved_size += size
+            deleted_size += size
             console.print(f"[green]✓[/green] [bold]{folder}[/bold]")
         except OSError as exc:
             console.print(f"[red]✗[/red] {folder}")
@@ -147,7 +147,7 @@ def main():
     console.print()
     console.print(
         Panel.fit(
-            f"[bold green]CLEANUP COMPLETED[/bold green]\nMoved to Recycle Bin: {format_size(moved_size)}",
+            f"[bold green]CLEANUP COMPLETED[/bold green]\nDeleted: {format_size(deleted_size)}",
             border_style="green",
         )
     )
